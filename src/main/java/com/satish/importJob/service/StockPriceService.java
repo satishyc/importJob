@@ -10,7 +10,7 @@ import java.util.List;
 @Service
 public class StockPriceService {
     @Autowired
-    private StockPriceRepository stockPriceRepository;
+    private final StockPriceRepository stockPriceRepository;
     @Autowired
     public StockPriceService(StockPriceRepository stockPriceRepository) {
         this.stockPriceRepository = stockPriceRepository;
