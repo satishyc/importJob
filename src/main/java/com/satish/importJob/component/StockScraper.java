@@ -11,9 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class StockScraper {
@@ -25,7 +23,8 @@ public class StockScraper {
     // Define the cron expression for scheduling
     @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     public void scrapeStockData()  {
-        List<StockPrice> stockPriceList = new ArrayList<>();
+        Map<String,StockPrice> stockPriceMap = new HashMap<>();
+        Set<StockPrice> stockPriceList = new HashSet<>();
         logger.info("Stock Price Import Started");
         for (int i = 1; i <= 132; i++) {
             String url = "https://www.screener.in/screens/356009/bse-nse-company-list/?page=" + i;
@@ -43,7 +42,12 @@ public class StockScraper {
                         String name = columns.get(1).text();  // Adjust index if necessary
                         String cmp = columns.get(2).text();   // Adjust index if necessary
                         if(!name.contains("Median")){
-                            stockPriceList.add(new StockPrice(name,Double.valueOf(cmp),new Date()));
+                            if(!stockPriceMap.containsKey(name)){
+                                StockPrice stockPrice = new StockPrice(name,Double.valueOf(cmp),new Date());
+                                stockPriceList.add(stockPrice);
+                                stockPriceMap.put(name,stockPrice);
+                            }
+
                         }
                         // You can save the data to MongoDB or any other storage here
                     }
@@ -58,7 +62,7 @@ public class StockScraper {
         if(stockPriceList.size()>0){
             logger.info("Stock Price Import Completed");
             stockPriceService.deleteAll();
-            stockPriceService.saveStocks(stockPriceList);
+            stockPriceService.saveStocks(stockPriceList.stream().toList());
         }else{
             logger.warn("Issue with Stock Import please verify it");
         }

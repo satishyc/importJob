@@ -12,9 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class MutualFundScraper {
@@ -23,6 +21,7 @@ public class MutualFundScraper {
     MutualFundPriceService mutualFundPriceService;
     @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     public void scrapeMutualFundData()  {
+        Map<String,MutualFundPrice> mutualFundPriceMap = new HashMap<>();
         List<MutualFundPrice> mutualFundPriceList = new ArrayList<>();
         try {
             logger.info("Mutual Fund Import Process Started");
@@ -43,8 +42,13 @@ public class MutualFundScraper {
                     String navDate = columns.get(4).text();
                     // Adjust the selector as needed
                     //noinspection StringOperationCanBeSimplified
-                    mutualFundPriceList.add(new MutualFundPrice(fundName,Double.valueOf(nav.substring(1,nav.length())),
-                            navDate,new Date()));
+                    if(!mutualFundPriceMap.containsKey(fundName)){
+                        MutualFundPrice mfPrice = new MutualFundPrice(fundName,Double.valueOf(nav.substring(1,nav.length())),
+                                navDate,new Date());
+                        mutualFundPriceList.add(mfPrice);
+                        mutualFundPriceMap.put(fundName,mfPrice);
+                    }
+
                 }
 
             }
